@@ -1,0 +1,21 @@
+services:
+  bot:
+    build: .
+    container_name: personal_agent_bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    volumes:
+      - ./logs:/app/logs
+      - hf_cache:/app/hf_cache
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('api.telegram.org', 443), timeout=5)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  hf_cache:
