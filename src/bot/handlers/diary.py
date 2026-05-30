@@ -25,8 +25,8 @@ async def on_diary(message: Message) -> None:
     parts = (message.text or "").split(maxsplit=1)
     if len(parts) < 2:
         await message.answer(
-            "Напиши как прошёл день — одной фразой или развёрнуто. Пример:\n"
-            "/diary день норм, поработал над StyleAura, шея устала, mood 7"
+            "Write how your day went — one line or in detail. Example:\n"
+            "/diary day was fine, worked on the dashboard, neck tired, mood 7"
         )
         return
     raw = parts[1].strip()
@@ -75,11 +75,11 @@ async def _save_diary(user_id: int, raw: str, message: Message) -> None:
 
     if mood is None:
         await message.answer(
-            f"Записал. Как настроение по шкале 1-10?",
+            "Logged. How's your mood on a 1-10 scale?",
             reply_markup=mood_keyboard("mood"),
         )
     else:
-        await message.answer(f"Записал. mood={mood} energy={energy or '?'}")
+        await message.answer(f"Logged. mood={mood} energy={energy or '?'}")
 
 
 @router.callback_query(F.data.startswith("mood:") | F.data.startswith("energy:"))
@@ -102,11 +102,11 @@ async def on_mood(cb: CallbackQuery) -> None:
     entry = await DiaryRepo.get_by_date(user_id, today)
     if entry is None:
         # Создаём заглушку
-        entry = DiaryEntry(user_id=user_id, entry_date=today, raw_text="(оценка только)")
+        entry = DiaryEntry(user_id=user_id, entry_date=today, raw_text="(rating only)")
     if kind == "mood":
         entry.mood = value
         next_kind = "energy"
-        prompt = "А энергия?"
+        prompt = "And energy?"
     else:
         entry.energy = value
         next_kind = None
@@ -118,6 +118,6 @@ async def on_mood(cb: CallbackQuery) -> None:
         await cb.message.edit_text(prompt, reply_markup=mood_keyboard(next_kind))  # type: ignore[union-attr]
     else:
         await cb.message.edit_text(  # type: ignore[union-attr]
-            f"Записал. mood={entry.mood or '?'} energy={entry.energy or '?'}"
+            f"Logged. mood={entry.mood or '?'} energy={entry.energy or '?'}"
         )
     await cb.answer()

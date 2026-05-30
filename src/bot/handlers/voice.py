@@ -28,17 +28,17 @@ TASK_PATTERN = re.compile(r"\[task:\s*(.+?)\]", re.IGNORECASE)
 @router.message(F.voice)
 async def on_voice(message: Message, state: FSMContext) -> None:
     if not settings.enable_voice:
-        await message.answer("Голос пока отключён. Напиши текстом.")
+        await message.answer("Voice is off for now. Send text.")
         return
 
     if await state.get_state() is not None:
-        await message.answer("Сейчас идёт онбординг — ответь, пожалуйста, текстом.")
+        await message.answer("Onboarding is in progress — please answer with text.")
         return
 
     user_id = message.from_user.id  # type: ignore[union-attr]
     profile = await ProfileRepo.get(user_id)
     if profile is None or profile.onboarding_completed_at is None:
-        await message.answer("Сначала пройдём онбординг — нажми /start")
+        await message.answer("Let's do onboarding first — hit /start")
         return
 
     voice = message.voice
@@ -50,7 +50,7 @@ async def on_voice(message: Message, state: FSMContext) -> None:
     # Скачиваем .ogg
     file = await message.bot.get_file(voice.file_id)
     if file.file_path is None:
-        await message.answer("Не получилось скачать голосовое.")
+        await message.answer("Couldn't download the voice message.")
         return
     buf = io.BytesIO()
     await message.bot.download_file(file.file_path, buf)
@@ -58,7 +58,7 @@ async def on_voice(message: Message, state: FSMContext) -> None:
 
     text = await transcribe_voice(ogg_bytes)
     if not text:
-        await message.answer("Не получилось распознать. Попробуй ещё раз или напиши текстом.")
+        await message.answer("Couldn't transcribe it. Try again or send text.")
         return
 
     # Дальше — как обычное текстовое сообщение
@@ -81,17 +81,17 @@ async def on_voice(message: Message, state: FSMContext) -> None:
         )
     except Exception as e:
         log.exception("voice.llm_failed", error=str(e))
-        await message.answer(f"📝 Распознал: «{text}»\n\nНо что-то с ответом не вышло, попробуй ещё.")
+        await message.answer(f"📝 Heard: \"{text}\"\n\nBut something went wrong with the reply, try again.")
         return
 
     cleaned, task_titles = _extract_tasks(response)
-    await message.answer(f"📝 «{text}»\n\n{cleaned or response}")
+    await message.answer(f"📝 \"{text}\"\n\n{cleaned or response}")
     await ConversationsRepo.append(user_id, "assistant", response)
 
     for title in task_titles:
         try:
             t = await TasksRepo.create(TaskItem(user_id=user_id, title=title))
-            await message.answer(f"📌 Записал задачу #{t.id}: {title}")
+            await message.answer(f"📌 Logged task #{t.id}: {title}")
         except Exception as e:
             log.warning("task.create_failed", error=str(e))
 

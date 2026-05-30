@@ -13,7 +13,7 @@ import structlog
 log = structlog.get_logger()
 
 NOMINATIM_BASE = "https://nominatim.openstreetmap.org"
-USER_AGENT = "personal_agent_telegram_bot/0.1 (single-user, contact: github.com/personal-agent)"
+USER_AGENT = "telegram_ai_companion_bot/0.1 (single-user, contact: github.com/hnvor/telegram-ai-companion)"
 
 # Простой rate-limiter для соблюдения 1 req/sec у Nominatim
 _nominatim_lock = asyncio.Lock()

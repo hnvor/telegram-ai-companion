@@ -76,11 +76,11 @@ async def update_life_state(user_id: int, since_hours: int = 30, max_tokens: int
         return False
 
     user_message = (
-        "## ТЕКУЩИЙ STATE\n"
+        "## CURRENT STATE\n"
         + json.dumps(current, ensure_ascii=False, indent=2)
-        + "\n\n## НОВЫЕ СООБЩЕНИЯ\n"
+        + "\n\n## NEW MESSAGES\n"
         + convo_text
-        + "\n\n## ЗАДАЧА\nВерни обновлённый JSON state."
+        + "\n\n## TASK\nReturn the updated JSON state."
     )
 
     try:
@@ -130,30 +130,30 @@ def format_life_state_block(state: dict) -> str:
     """Превращает state в компактный текстовый блок для system prompt."""
     if not state:
         return ""
-    lines = ["## ПОРТРЕТ ЖИЗНИ ПОЛЬЗОВАТЕЛЯ (живой, обновляется ежедневно)"]
+    lines = ["## USER LIFE PORTRAIT (living, updated daily)"]
     if state.get("core"):
-        lines.append(f"- Суть: {state['core']}")
+        lines.append(f"- Core: {state['core']}")
     if state.get("direction"):
-        lines.append(f"- Направление: {state['direction']}")
+        lines.append(f"- Direction: {state['direction']}")
 
     health = state.get("health") or {}
     health_lines = []
     for k, label in [
-        ("mental", "психика"),
-        ("medication", "препараты"),
-        ("somatic", "тело"),
-        ("sleep", "сон"),
-        ("physical", "физика"),
+        ("mental", "mental"),
+        ("medication", "medication"),
+        ("somatic", "body"),
+        ("sleep", "sleep"),
+        ("physical", "physical"),
     ]:
         v = health.get(k)
         if v:
             health_lines.append(f"  - {label}: {v}")
     if health_lines:
-        lines.append("- Здоровье:")
+        lines.append("- Health:")
         lines.extend(health_lines)
 
     if state.get("projects"):
-        lines.append("- Проекты:")
+        lines.append("- Projects:")
         for p in state["projects"][:6]:
             if isinstance(p, dict):
                 name = p.get("name", "?")
@@ -161,22 +161,22 @@ def format_life_state_block(state: dict) -> str:
                 latest = p.get("latest", "")
                 lines.append(f"  - {name} [{st}] {latest}".rstrip())
     if state.get("relationships"):
-        lines.append("- Близкие:")
+        lines.append("- People:")
         for r in state["relationships"][:5]:
             if isinstance(r, dict):
                 lines.append(f"  - {r.get('name', '?')} ({r.get('role', '?')}): {r.get('latest', '')}".rstrip())
     if state.get("experiments"):
-        lines.append("- Эксперименты:")
+        lines.append("- Experiments:")
         for e in state["experiments"][:8]:
             if isinstance(e, dict):
                 lines.append(f"  - {e.get('what', '?')} ({e.get('when', '?')}): {e.get('result', '')}".rstrip())
     if state.get("patterns"):
-        lines.append("- Паттерны:")
+        lines.append("- Patterns:")
         for pt in state["patterns"][:8]:
             if isinstance(pt, dict):
                 lines.append(f"  - {pt.get('what', '?')} → {pt.get('impact', '')}".rstrip())
     if state.get("knowns"):
-        lines.append("- Известно: " + "; ".join(str(x) for x in state["knowns"][:10]))
+        lines.append("- Known: " + "; ".join(str(x) for x in state["knowns"][:10]))
     if state.get("open_questions"):
-        lines.append("- Открытые вопросы: " + "; ".join(str(x) for x in state["open_questions"][:5]))
+        lines.append("- Open questions: " + "; ".join(str(x) for x in state["open_questions"][:5]))
     return "\n".join(lines)

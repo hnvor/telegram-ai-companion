@@ -150,70 +150,70 @@ def format_dynamic_system(bundle: ContextBundle) -> str:
     # === Weekly plan (план текущей недели) ===
     wp = bundle.today_snapshot.get("weekly_plan")
     if wp:
-        parts.append("## ПЛАН ТЕКУЩЕЙ НЕДЕЛИ")
+        parts.append("## CURRENT WEEK PLAN")
         ws = wp.get("week_start")
         if ws:
-            parts.append(f"_неделя начала: {ws}_")
+            parts.append(f"_week started: {ws}_")
         for i, f in enumerate(wp.get("focuses") or [], start=1):
             if isinstance(f, dict):
                 parts.append(f"  {i}. {f.get('title', '?')} — {f.get('why', '')}".rstrip(" —"))
         if wp.get("experiment"):
             e = wp["experiment"]
             if isinstance(e, dict):
-                parts.append(f"  🧪 Эксперимент: {e.get('what', '?')}")
+                parts.append(f"  🧪 Experiment: {e.get('what', '?')}")
         if wp.get("challenge"):
             c = wp["challenge"]
             if isinstance(c, dict):
-                parts.append(f"  🎯 Челлендж: {c.get('what', '?')}")
+                parts.append(f"  🎯 Challenge: {c.get('what', '?')}")
         parts.append("")
 
     # === Profile ===
-    parts.append("## ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ")
-    parts.append(f"- Имя: {p.display_name or 'не указано'}")
-    parts.append(f"- Часовой пояс: {p.timezone}")
-    parts.append(f"- Сейчас локально: {bundle.today_snapshot.get('local_time', '?')}")
+    parts.append("## USER PROFILE")
+    parts.append(f"- Name: {p.display_name or 'not set'}")
+    parts.append(f"- Timezone: {p.timezone}")
+    parts.append(f"- Local time now: {bundle.today_snapshot.get('local_time', '?')}")
     if p.wake_window or p.sleep_window:
-        parts.append(f"- Ритм: подъём ~{p.wake_window or '?'}, отбой ~{p.sleep_window or '?'}")
-    parts.append(f"- Тон ({tone_desc})")
+        parts.append(f"- Rhythm: wake ~{p.wake_window or '?'}, sleep ~{p.sleep_window or '?'}")
+    parts.append(f"- Tone ({tone_desc})")
 
     if p.goals:
-        parts.append("\n### Цели")
+        parts.append("\n### Goals")
         for g in p.goals[:5]:
             parts.append(f"- {g}")
     if p.projects:
-        parts.append("\n### Проекты")
+        parts.append("\n### Projects")
         for proj in p.projects[:5]:
             parts.append(f"- {proj}")
 
     # === Today snapshot ===
     snap = bundle.today_snapshot
     if snap.get("habits_today"):
-        parts.append("\n### Сегодня (привычки)")
+        parts.append("\n### Today (habits)")
         for h in snap["habits_today"]:
-            parts.append(f"- {h['name']}: {h['done']} раз")
+            parts.append(f"- {h['name']}: {h['done']} times")
     if snap.get("yesterday_mood") is not None:
         parts.append(
-            f"\n### Вчера: mood={snap.get('yesterday_mood')}, energy={snap.get('yesterday_energy')}"
+            f"\n### Yesterday: mood={snap.get('yesterday_mood')}, energy={snap.get('yesterday_energy')}"
         )
 
     # === Active tasks ===
     if bundle.active_tasks:
-        parts.append("\n## АКТИВНЫЕ ЗАДАЧИ")
+        parts.append("\n## ACTIVE TASKS")
         for t in bundle.active_tasks:
-            due = f" (до {t.due_at:%d.%m %H:%M})" if t.due_at else ""
+            due = f" (due {t.due_at:%d.%m %H:%M})" if t.due_at else ""
             proj = f" [{t.project}]" if t.project else ""
             parts.append(f"- #{t.id} {t.title}{proj}{due}")
 
     # === Relevant facts (RAG) ===
     if bundle.relevant_facts:
-        parts.append("\n## РЕЛЕВАНТНЫЕ ФАКТЫ ИЗ ДОЛГОСРОЧНОЙ ПАМЯТИ")
+        parts.append("\n## RELEVANT FACTS FROM LONG-TERM MEMORY")
         for f in bundle.relevant_facts:
             when = f" ({f.created_at:%d.%m.%Y})" if f.created_at else ""
             parts.append(f"- [{f.kind}]{when} {f.content}")
 
     # === Diary recall ===
     if bundle.relevant_diary:
-        parts.append("\n## ПОХОЖИЕ ДНЕВНИКОВЫЕ ЗАПИСИ")
+        parts.append("\n## SIMILAR DIARY ENTRIES")
         for d in bundle.relevant_diary:
             mood = f" mood={d.mood}" if d.mood else ""
             parts.append(f"- {d.entry_date}{mood}: {d.raw_text[:280]}")

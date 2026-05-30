@@ -16,11 +16,11 @@ def task_actions_kb(task_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Сделал", callback_data=f"task:done:{task_id}"),
-                InlineKeyboardButton(text="⏰ +1 час", callback_data=f"task:postpone:1h:{task_id}"),
-                InlineKeyboardButton(text="📅 Завтра", callback_data=f"task:postpone:1d:{task_id}"),
+                InlineKeyboardButton(text="✅ Done", callback_data=f"task:done:{task_id}"),
+                InlineKeyboardButton(text="⏰ +1 hour", callback_data=f"task:postpone:1h:{task_id}"),
+                InlineKeyboardButton(text="📅 Tomorrow", callback_data=f"task:postpone:1d:{task_id}"),
             ],
-            [InlineKeyboardButton(text="❌ Дроп", callback_data=f"task:drop:{task_id}")],
+            [InlineKeyboardButton(text="❌ Drop", callback_data=f"task:drop:{task_id}")],
         ]
     )
 
@@ -30,9 +30,9 @@ def experiment_kb(experiment_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🟢 Беру", callback_data=f"exp:accept:{experiment_id}"),
-                InlineKeyboardButton(text="⏸ Не сейчас", callback_data=f"exp:later:{experiment_id}"),
-                InlineKeyboardButton(text="✋ Не подходит", callback_data=f"exp:reject:{experiment_id}"),
+                InlineKeyboardButton(text="🟢 I'm in", callback_data=f"exp:accept:{experiment_id}"),
+                InlineKeyboardButton(text="⏸ Not now", callback_data=f"exp:later:{experiment_id}"),
+                InlineKeyboardButton(text="✋ Not for me", callback_data=f"exp:reject:{experiment_id}"),
             ]
         ]
     )
@@ -43,14 +43,14 @@ def experiment_done_kb(experiment_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Сделал", callback_data=f"exp:done:{experiment_id}"),
-                InlineKeyboardButton(text="❌ Не вышло", callback_data=f"exp:fail:{experiment_id}"),
+                InlineKeyboardButton(text="✅ Did it", callback_data=f"exp:done:{experiment_id}"),
+                InlineKeyboardButton(text="❌ Didn't work out", callback_data=f"exp:fail:{experiment_id}"),
             ]
         ]
     )
 
 
-def confirm_kb(yes: str = "Да", no: str = "Нет", prefix: str = "confirm") -> InlineKeyboardMarkup:
+def confirm_kb(yes: str = "Yes", no: str = "No", prefix: str = "confirm") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [

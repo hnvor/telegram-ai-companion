@@ -36,8 +36,8 @@ async def on_location(message: Message) -> None:
     asyncio.create_task(_reverse_geocode_and_label(user_id, loc.latitude, loc.longitude))
 
     await message.answer(
-        f"📍 Запомнил твою локацию ({loc.latitude:.4f}, {loc.longitude:.4f}). "
-        "Теперь смогу искать активности и погоду рядом."
+        f"📍 Saved your location ({loc.latitude:.4f}, {loc.longitude:.4f}). "
+        "Now I can look up activities and weather nearby."
     )
 
 
@@ -56,13 +56,13 @@ async def on_where_manual(message: Message) -> None:
         )
         if row is None:
             await message.answer(
-                "Локации ещё не было. Отправь геопозицию через скрепку → Геопозиция, "
-                "или напиши: /where Хошимин"
+                "No location yet. Send your position via the paperclip → Location, "
+                "or type: /where Lisbon"
             )
             return
         label = row["label"] or f"({row['lat']:.4f}, {row['lon']:.4f})"
         await message.answer(
-            f"📍 Текущая: {label}\nИсточник: {row['source']}, обновлена: {row['created_at']:%Y-%m-%d %H:%M UTC}"
+            f"📍 Current: {label}\nSource: {row['source']}, updated: {row['created_at']:%Y-%m-%d %H:%M UTC}"
         )
         return
 
@@ -73,7 +73,7 @@ async def on_where_manual(message: Message) -> None:
     coords = await geocode_city(label)
     if coords is None:
         await message.answer(
-            f"Не нашёл координаты для «{label}». Попробуй точнее (например: «Hồ Chí Minh, Vietnam»)."
+            f"Couldn't find coordinates for \"{label}\". Try being more specific (e.g. \"Lisbon, Portugal\")."
         )
         return
 
@@ -88,7 +88,7 @@ async def on_where_manual(message: Message) -> None:
         lon,
         resolved_name,
     )
-    await message.answer(f"📍 Запомнил: {resolved_name} ({lat:.4f}, {lon:.4f})")
+    await message.answer(f"📍 Saved: {resolved_name} ({lat:.4f}, {lon:.4f})")
 
 
 async def _reverse_geocode_and_label(user_id: int, lat: float, lon: float) -> None:

@@ -35,37 +35,37 @@ async def get_weather(lat: float, lon: float, days: int = 3) -> dict | None:
 
 
 WMO_CODES: dict[int, str] = {
-    0: "ясно",
-    1: "почти ясно",
-    2: "переменная облачность",
-    3: "пасмурно",
-    45: "туман",
-    48: "иней-туман",
-    51: "морось слабая",
-    53: "морось",
-    55: "морось сильная",
-    61: "дождь слабый",
-    63: "дождь",
-    65: "дождь сильный",
-    71: "снег слабый",
-    73: "снег",
-    75: "снег сильный",
-    77: "снежная крупа",
-    80: "ливни слабые",
-    81: "ливни",
-    82: "ливни сильные",
-    85: "снегопад слабый",
-    86: "снегопад сильный",
-    95: "гроза",
-    96: "гроза с градом",
-    99: "сильная гроза с градом",
+    0: "clear",
+    1: "mostly clear",
+    2: "partly cloudy",
+    3: "overcast",
+    45: "fog",
+    48: "rime fog",
+    51: "light drizzle",
+    53: "drizzle",
+    55: "heavy drizzle",
+    61: "light rain",
+    63: "rain",
+    65: "heavy rain",
+    71: "light snow",
+    73: "snow",
+    75: "heavy snow",
+    77: "snow grains",
+    80: "light showers",
+    81: "showers",
+    82: "heavy showers",
+    85: "light snowfall",
+    86: "heavy snowfall",
+    95: "thunderstorm",
+    96: "thunderstorm with hail",
+    99: "severe thunderstorm with hail",
 }
 
 
 def _describe_code(code: int | None) -> str:
     if code is None:
         return "?"
-    return WMO_CODES.get(int(code), f"код {code}")
+    return WMO_CODES.get(int(code), f"code {code}")
 
 
 def _humanize(data: dict) -> dict:

@@ -24,12 +24,12 @@ async def generate_challenge(user_id: int) -> dict | None:
     from datetime import datetime
     today_label = datetime.utcnow().strftime("%A")
     user_message = (
-        f"Сегодня: {today_label}\n\n"
-        "## ПОРТРЕТ ЖИЗНИ\n"
+        f"Today: {today_label}\n\n"
+        "## LIFE PORTRAIT\n"
         + json.dumps(state, ensure_ascii=False, indent=2)
-        + "\n\n## ИСТОРИЯ ЭКСПЕРИМЕНТОВ\n"
+        + "\n\n## EXPERIMENT HISTORY\n"
         + json.dumps(experiments, ensure_ascii=False, indent=2, default=str)[:4000]
-        + "\n\n## ЗАДАЧА\nВерни JSON одного челленджа."
+        + "\n\n## TASK\nReturn JSON for one challenge."
     )
 
     try:
@@ -63,7 +63,7 @@ async def generate_challenge(user_id: int) -> dict | None:
 
 
 def format_challenge_message(challenge: dict) -> str:
-    lines = ["🎯 Челлендж", "", challenge.get("what", "?")]
+    lines = ["🎯 Challenge", "", challenge.get("what", "?")]
     if challenge.get("description"):
         lines.append("")
         lines.append(challenge["description"])

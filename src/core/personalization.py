@@ -43,8 +43,8 @@ async def recalibrate_tone(user_id: int) -> dict | None:
     current_tone = dict(profile.preferences.get("tone", DEFAULT_TONE))
 
     user_message = (
-        f"Текущий тон: {json.dumps(current_tone, ensure_ascii=False)}\n\n"
-        f"Последние 50 сообщений:\n{transcript}"
+        f"Current tone: {json.dumps(current_tone, ensure_ascii=False)}\n\n"
+        f"Last 50 messages:\n{transcript}"
     )
 
     try:

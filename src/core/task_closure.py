@@ -28,8 +28,8 @@ async def auto_close_from_message(bot: Bot, user_id: int, user_text: str) -> Non
 
     task_list = "\n".join(f"- id={t.id}: {t.title}" for t in tasks if t.id is not None)
     prompt = (
-        f"Сообщение пользователя:\n{user_text}\n\nОткрытые задачи:\n{task_list}\n\n"
-        "Верни JSON-массив id закрытых."
+        f"User message:\n{user_text}\n\nOpen tasks:\n{task_list}\n\n"
+        "Return a JSON array of the closed ids."
     )
     try:
         raw = await chat_json(
@@ -51,7 +51,7 @@ async def auto_close_from_message(bot: Bot, user_id: int, user_text: str) -> Non
         try:
             await bot.send_message(
                 chat_id=user_id,
-                text=f"Похоже ты закрыл #{tid}: {t.title}. Подтверди?",
+                text=f"Looks like you closed #{tid}: {t.title}. Confirm?",
                 reply_markup=task_actions_kb(tid),
             )
         except Exception as e:

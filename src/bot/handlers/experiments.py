@@ -21,18 +21,18 @@ async def on_experiment_cb(cb: CallbackQuery) -> None:
     try:
         exp_id = int(raw_id)
     except ValueError:
-        await cb.answer("Битый id", show_alert=False)
+        await cb.answer("Broken id", show_alert=False)
         return
 
     exp = await ExperimentsRepo.get(exp_id)
     if exp is None:
-        await cb.answer("Эксперимент не найден", show_alert=False)
+        await cb.answer("Experiment not found", show_alert=False)
         return
 
     msg = cb.message
     if action == "accept":
         await ExperimentsRepo.set_accepted(exp_id, True)
-        await cb.answer("Беру 👍")
+        await cb.answer("I'm in 👍")
         if msg:
             try:
                 await msg.edit_reply_markup(reply_markup=experiment_done_kb(exp_id))
@@ -40,14 +40,14 @@ async def on_experiment_cb(cb: CallbackQuery) -> None:
                 pass
             try:
                 await msg.answer(
-                    f"Окей, держу в виду: «{exp['title'][:120]}». "
-                    "Как сделаешь — нажми ✅ ниже, отметим как закрытое."
+                    f"Okay, keeping it in mind: \"{exp['title'][:120]}\". "
+                    "When you've done it — hit ✅ below and we'll mark it closed."
                 )
             except Exception:
                 pass
     elif action == "later":
         await ExperimentsRepo.set_accepted(exp_id, False)
-        await cb.answer("Окей, в другой раз")
+        await cb.answer("Okay, another time")
         if msg:
             try:
                 await msg.edit_reply_markup(reply_markup=None)
@@ -55,7 +55,7 @@ async def on_experiment_cb(cb: CallbackQuery) -> None:
                 pass
     elif action == "reject":
         await ExperimentsRepo.set_accepted(exp_id, False)
-        await cb.answer("Понял, не подходит")
+        await cb.answer("Got it, not for you")
         if msg:
             try:
                 await msg.edit_reply_markup(reply_markup=None)
@@ -63,26 +63,26 @@ async def on_experiment_cb(cb: CallbackQuery) -> None:
                 pass
     elif action == "done":
         await ExperimentsRepo.set_completed(exp_id, True)
-        await cb.answer("🔥 Засчитано!")
+        await cb.answer("🔥 Counted!")
         if msg:
             try:
                 await msg.edit_reply_markup(reply_markup=None)
             except Exception:
                 pass
             try:
-                await msg.answer(f"Отметил «{exp['title'][:120]}» как сделанное. Расскажи как зашло, если есть силы.")
+                await msg.answer(f"Marked \"{exp['title'][:120]}\" as done. Tell me how it went, if you have the energy.")
             except Exception:
                 pass
     elif action == "fail":
         await ExperimentsRepo.set_completed(exp_id, False)
-        await cb.answer("Бывает, ничего страшного")
+        await cb.answer("It happens, no big deal")
         if msg:
             try:
                 await msg.edit_reply_markup(reply_markup=None)
             except Exception:
                 pass
             try:
-                await msg.answer(f"Окей, «{exp['title'][:80]}» не зашло. Что помешало?")
+                await msg.answer(f"Okay, \"{exp['title'][:80]}\" didn't land. What got in the way?")
             except Exception:
                 pass
     else:

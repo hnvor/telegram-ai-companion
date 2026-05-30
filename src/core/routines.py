@@ -25,8 +25,8 @@ async def detect_and_log_routines(user_id: int, user_text: str) -> list[str]:
 
     listing = "\n".join(f"- name={r['name']}: {r['label']}" for r in routines)
     prompt = (
-        f"Сообщение пользователя:\n{user_text}\n\nАктивные рутины:\n{listing}\n\n"
-        "Верни JSON-массив name закрытых сегодня."
+        f"User message:\n{user_text}\n\nActive routines:\n{listing}\n\n"
+        "Return a JSON array of the names closed today."
     )
     try:
         raw = await chat_json(
@@ -59,16 +59,16 @@ def format_routines_block(overdue: list[dict]) -> str:
     """Блок «банальных вещей» для system prompt. Если ничего не просрочено — пусто."""
     if not overdue:
         return ""
-    lines = ["## БАНАЛЬНЫЕ ВЕЩИ (просрочены)"]
+    lines = ["## MUNDANE THINGS (overdue)"]
     for r in overdue:
         days = r.get("days_since")
         if days is None:
-            tail = "ни разу не отмечал"
+            tail = "never logged"
         else:
-            tail = f"{int(round(days))}д назад"
+            tail = f"{int(round(days))}d ago"
         lines.append(f"- {r['label']} ({tail})")
-    lines.append("При уместном случае мягко напомни (одно из них, не списком). "
-                 "Если пользователь упомянет что сделал — бот сам отметит, тебе ничего делать не надо.")
+    lines.append("When it fits, nudge gently (one of them, not as a list). "
+                 "If the user mentions they did it — the bot logs it itself, you don't need to do anything.")
     return "\n".join(lines)
 
 

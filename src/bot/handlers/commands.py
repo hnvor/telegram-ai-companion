@@ -18,34 +18,34 @@ router = Router()
 log = structlog.get_logger()
 
 HELP_TEXT = (
-    "Команды:\n"
-    "/start — онбординг (только в первый раз)\n"
-    "/help — это сообщение\n"
-    "\nПамять и состояние:\n"
-    "/profile — твой профиль (имя, цели, проекты, тон, пуши, локация)\n"
-    "/facts [kind] — что я запомнил о тебе (kind: health, goal, project, preference, и т.д.)\n"
-    "/signals — что детектор паттернов заметил недавно\n"
-    "/jobs — когда я тебе планирую написать сам\n"
-    "\nЗадачи:\n"
-    "/task <текст> — добавить задачу\n"
-    "/tasks — открытые задачи\n"
-    "/done <id> — закрыть задачу\n"
-    "\nДневник:\n"
-    "/diary <текст> — запись вручную (можно и просто текстом боту)\n"
-    "/export — выгрузить весь дневник в JSON\n"
-    "\nПланирование (агент использует свои знания + погоду):\n"
-    "/plan_date [контекст] — придумать конкретный план свидания\n"
-    "/plan_day [контекст] — расписать день\n"
-    "/activity [контекст] — одна активность под текущее состояние\n"
-    "\nЛокация:\n"
-    "📎 → Геопозиция — отправить координаты\n"
-    "/where [город] — посмотреть / задать вручную (например: /where Хошимин)\n"
-    "\nНастройки:\n"
-    "/timezone <TZ> — сменить часовой пояс\n"
-    "/pause [2h | 1d | until tomorrow | off] — отключить нотификации\n"
-    "/tone harder | softer | reset — подкрутить тон\n"
-    "/usage — расход токенов за 24ч / 7д\n"
-    "\nПросто пиши мне о чём угодно — я запомню."
+    "Commands:\n"
+    "/start — onboarding (first time only)\n"
+    "/help — this message\n"
+    "\nMemory & state:\n"
+    "/profile — your profile (name, goals, projects, tone, nudges, location)\n"
+    "/facts [kind] — what I remember about you (kind: health, goal, project, preference, etc.)\n"
+    "/signals — what the pattern detector noticed recently\n"
+    "/jobs — when I'll message you on my own\n"
+    "\nTasks:\n"
+    "/task <text> — add a task\n"
+    "/tasks — open tasks\n"
+    "/done <id> — close a task\n"
+    "\nDiary:\n"
+    "/diary <text> — manual entry (or just message me plain text)\n"
+    "/export — export the whole diary as JSON\n"
+    "\nPlanning (agent uses what it knows + weather):\n"
+    "/plan_date [context] — come up with a concrete date plan\n"
+    "/plan_day [context] — lay out your day\n"
+    "/activity [context] — one activity for your current state\n"
+    "\nLocation:\n"
+    "📎 → Location — send coordinates\n"
+    "/where [city] — view / set manually (e.g. /where Lisbon)\n"
+    "\nSettings:\n"
+    "/timezone <TZ> — change timezone\n"
+    "/pause [2h | 1d | until tomorrow | off] — mute notifications\n"
+    "/tone harder | softer | reset — adjust tone\n"
+    "/usage — token usage for 24h / 7d\n"
+    "\nJust message me about anything — I'll remember."
 )
 
 
@@ -58,16 +58,16 @@ async def on_help(message: Message) -> None:
 async def on_timezone(message: Message) -> None:
     parts = (message.text or "").split(maxsplit=1)
     if len(parts) < 2:
-        await message.answer("Используй: /timezone Europe/Kyiv")
+        await message.answer("Use: /timezone Europe/Kyiv")
         return
     tz = parts[1].strip()
     try:
         ZoneInfo(tz)
     except Exception:
-        await message.answer(f"Не узнаю такой пояс: {tz}")
+        await message.answer(f"I don't recognize that timezone: {tz}")
         return
     await ProfileRepo.patch(message.from_user.id, timezone=tz)  # type: ignore[union-attr]
-    await message.answer(f"Окей, переключил на {tz}")
+    await message.answer(f"Okay, switched to {tz}")
 
 
 PAUSE_RE = re.compile(r"^(\d+)([hdm])$", re.IGNORECASE)
@@ -79,20 +79,20 @@ async def on_pause(message: Message) -> None:
     user_id = message.from_user.id  # type: ignore[union-attr]
     arg = parts[1].strip().lower() if len(parts) >= 2 else "1d"
 
-    if arg in ("off", "нет", "stop"):
+    if arg in ("off", "no", "stop"):
         await ProfileRepo.set_paused(user_id, None)
-        await message.answer("Пауза снята, нотификации снова работают.")
+        await message.answer("Pause lifted, notifications are back on.")
         return
 
     until = _parse_pause(arg)
     if until is None:
         await message.answer(
-            "Используй: /pause 2h, /pause 1d, /pause until tomorrow, /pause off"
+            "Use: /pause 2h, /pause 1d, /pause until tomorrow, /pause off"
         )
         return
 
     await ProfileRepo.set_paused(user_id, until)
-    await message.answer(f"Пауза до {until.strftime('%Y-%m-%d %H:%M UTC')}.")
+    await message.answer(f"Paused until {until.strftime('%Y-%m-%d %H:%M UTC')}.")
 
 
 def _parse_pause(arg: str) -> datetime | None:
@@ -116,7 +116,7 @@ def _parse_pause(arg: str) -> datetime | None:
 async def on_tone(message: Message) -> None:
     parts = (message.text or "").split(maxsplit=1)
     if len(parts) < 2:
-        await message.answer("Используй: /tone harder | softer | reset")
+        await message.answer("Use: /tone harder | softer | reset")
         return
     direction = parts[1].strip().lower()
     user_id = message.from_user.id  # type: ignore[union-attr]
@@ -135,13 +135,13 @@ async def on_tone(message: Message) -> None:
     elif direction == "reset":
         tone = {"warmth": 0.7, "directness": 0.5, "humor": 0.6, "push_intensity": 0.5}
     else:
-        await message.answer("Не узнаю. Используй harder / softer / reset.")
+        await message.answer("Don't recognize that. Use harder / softer / reset.")
         return
     prefs = dict(profile.preferences)
     prefs["tone"] = tone
     await ProfileRepo.patch(user_id, preferences=prefs)
     await message.answer(
-        f"Тон обновлён:\n"
+        f"Tone updated:\n"
         f"warmth={tone['warmth']:.2f} directness={tone['directness']:.2f} "
         f"humor={tone.get('humor', 0.6):.2f} push={tone['push_intensity']:.2f}"
     )
@@ -172,7 +172,7 @@ async def on_usage(message: Message) -> None:
         return "\n".join(out)
 
     await message.answer(
-        f"Расход за 24ч:\n{fmt(day)}\n\nРасход за 7д:\n{fmt(week)}"
+        f"Usage (24h):\n{fmt(day)}\n\nUsage (7d):\n{fmt(week)}"
     )
 
 
@@ -181,7 +181,7 @@ async def on_profile(message: Message) -> None:
     user_id = message.from_user.id  # type: ignore[union-attr]
     profile = await ProfileRepo.get(user_id)
     if profile is None:
-        await message.answer("Профиль ещё не создан. Жми /start.")
+        await message.answer("Profile not created yet. Hit /start.")
         return
 
     loc = await LocationsRepo.latest(user_id)
@@ -190,12 +190,12 @@ async def on_profile(message: Message) -> None:
     push_notes = profile.preferences.get("push_notes", "")
 
     lines = [
-        f"Имя: {profile.display_name or '?'}",
-        f"Часовой пояс: {profile.timezone}",
-        f"Локация: {loc.get('label') if loc else 'не задана'}",
-        f"Онбординг: {'пройден ' + profile.onboarding_completed_at.strftime('%Y-%m-%d') if profile.onboarding_completed_at else 'не пройден'}",
+        f"Name: {profile.display_name or '?'}",
+        f"Timezone: {profile.timezone}",
+        f"Location: {loc.get('label') if loc else 'not set'}",
+        f"Onboarding: {'completed ' + profile.onboarding_completed_at.strftime('%Y-%m-%d') if profile.onboarding_completed_at else 'not completed'}",
         "",
-        "Цели:",
+        "Goals:",
     ]
     for g in (profile.goals or [])[:10]:
         lines.append(f"  • {g}")
@@ -203,27 +203,27 @@ async def on_profile(message: Message) -> None:
         lines.append("  —")
 
     lines.append("")
-    lines.append("Проекты:")
+    lines.append("Projects:")
     for p in (profile.projects or [])[:10]:
         lines.append(f"  • {p}")
     if not profile.projects:
         lines.append("  —")
 
     lines.append("")
-    lines.append(f"Пуши: {', '.join(pushes) if pushes else 'нет'}")
+    lines.append(f"Nudges: {', '.join(pushes) if pushes else 'none'}")
     if push_notes:
-        lines.append(f"  пожелания: {push_notes}")
+        lines.append(f"  preferences: {push_notes}")
 
     if tone:
         lines.append("")
         lines.append(
-            f"Тон: warmth={tone.get('warmth', 0.7):.2f} "
+            f"Tone: warmth={tone.get('warmth', 0.7):.2f} "
             f"directness={tone.get('directness', 0.5):.2f} "
             f"humor={tone.get('humor', 0.6):.2f} "
             f"push={tone.get('push_intensity', 0.5):.2f}"
         )
     if profile.paused_until and profile.paused_until > datetime.now(timezone.utc):
-        lines.append(f"\n⏸ Пауза до {profile.paused_until:%Y-%m-%d %H:%M UTC}")
+        lines.append(f"\n⏸ Paused until {profile.paused_until:%Y-%m-%d %H:%M UTC}")
 
     await message.answer("\n".join(lines))
 
@@ -256,7 +256,7 @@ async def on_facts(message: Message) -> None:
         )
 
     if not rows:
-        await message.answer("Фактов пока не извлёк. Поговори со мной — я буду запоминать.")
+        await message.answer("No facts extracted yet. Talk to me — I'll remember.")
         return
 
     by_kind: dict[str, list[str]] = {}
@@ -267,10 +267,10 @@ async def on_facts(message: Message) -> None:
 
     lines: list[str] = []
     if kind_filter:
-        lines.append(f"Факты [{kind_filter}] — {len(rows)}:")
+        lines.append(f"Facts [{kind_filter}] — {len(rows)}:")
         lines.extend(by_kind.get(kind_filter, []))
     else:
-        lines.append(f"Извлечено {len(rows)} фактов (последние). По типам:\n")
+        lines.append(f"Extracted {len(rows)} facts (latest). By kind:\n")
         for k in sorted(by_kind.keys()):
             lines.append(f"[{k}] ({len(by_kind[k])})")
             lines.extend(by_kind[k])
@@ -279,7 +279,7 @@ async def on_facts(message: Message) -> None:
     text = "\n".join(lines)
     # Telegram message limit
     if len(text) > 3800:
-        text = text[:3800] + "\n…(обрезано)"
+        text = text[:3800] + "\n…(truncated)"
     await message.answer(text)
 
 
@@ -298,16 +298,16 @@ async def on_signals(message: Message) -> None:
     )
     if not rows:
         await message.answer(
-            "Детектор паттернов пока ничего не отметил. Это норм — он смотрит на дневники "
-            "и сообщения накопительно (низкий mood 3+ дня, маркеры усталости и т.д.) и срабатывает только "
-            "при явных триггерах."
+            "The pattern detector hasn't flagged anything yet. That's fine — it looks at diaries "
+            "and messages cumulatively (low mood 3+ days, fatigue markers, etc.) and only fires "
+            "on clear triggers."
         )
         return
-    lines = ["Сигналы детектора:"]
+    lines = ["Detector signals:"]
     for r in rows:
         cooldown = ""
         if r["cooldown_until"] and r["cooldown_until"] > datetime.now(timezone.utc):
-            cooldown = " (cooldown активен)"
+            cooldown = " (cooldown active)"
         lines.append(
             f"• {r['created_at']:%Y-%m-%d %H:%M} [{r['severity']}] {r['signal_kind']} → {r['action_taken']}{cooldown}"
         )
@@ -320,34 +320,34 @@ async def on_jobs(message: Message) -> None:
     user_id = message.from_user.id  # type: ignore[union-attr]
     profile = await ProfileRepo.get(user_id)
     if profile is None:
-        await message.answer("Сначала пройди /start.")
+        await message.answer("Go through /start first.")
         return
 
     pushes = profile.preferences.get("pushes", []) if isinstance(profile.preferences, dict) else []
     tz = ZoneInfo(profile.timezone or "UTC")
     now_local = datetime.now(tz)
 
-    lines = [f"Сейчас у тебя: {now_local:%Y-%m-%d %H:%M %Z}\n"]
+    lines = [f"Your local time: {now_local:%Y-%m-%d %H:%M %Z}\n"]
 
     if profile.paused_until and profile.paused_until > datetime.now(timezone.utc):
-        lines.append(f"⏸ Все нотификации на паузе до {profile.paused_until:%Y-%m-%d %H:%M UTC}\n")
+        lines.append(f"⏸ All notifications paused until {profile.paused_until:%Y-%m-%d %H:%M UTC}\n")
 
     if "morning_brief" in pushes:
-        lines.append("☀ Утренний брифинг — между 11:00 и 14:00 локально, если ты ещё не написал сегодня")
+        lines.append("☀ Morning brief — between 11:00 and 14:00 local, if you haven't messaged today")
     else:
-        lines.append("☀ Утренний брифинг — выключен")
+        lines.append("☀ Morning brief — off")
 
     if "evening_checkin" in pushes:
-        lines.append("🌙 Вечерний чекин — между 22:00 и 23:30 локально")
+        lines.append("🌙 Evening check-in — between 22:00 and 23:30 local")
     else:
-        lines.append("🌙 Вечерний чекин — выключен")
+        lines.append("🌙 Evening check-in — off")
 
     if "workout" in pushes or "water" in pushes or "sleep" in pushes:
-        lines.append("💪 Habit nudges — раз в 3 часа в активное окно (10:00-22:00)")
+        lines.append("💪 Habit nudges — every 3 hours during the active window (10:00-22:00)")
 
-    lines.append("🧠 Pattern detector — каждые 30 мин в окне 13:00-19:00 (если есть свежие триггеры)")
-    lines.append("📅 Воскресенье 20:00 UTC — еженедельный обзор + калибровка тона")
-    lines.append("\nКоманда /pause выключит всё временно.")
+    lines.append("🧠 Pattern detector — every 30 min in the 13:00-19:00 window (if there are fresh triggers)")
+    lines.append("📅 Sunday 20:00 UTC — weekly review + tone calibration")
+    lines.append("\n/pause turns everything off temporarily.")
 
     await message.answer("\n".join(lines))
 
@@ -397,8 +397,8 @@ async def on_dedup_facts(message: Message) -> None:
         user_id,
     )
     await message.answer(
-        f"Дедуп: удалил {len(rows)} точных дублей. Осталось активных фактов: {total_left}.\n"
-        f"Дальше дубли блокируются автоматически на уровне insert (порог 93% сходства)."
+        f"Dedup: removed {len(rows)} exact duplicates. Active facts left: {total_left}.\n"
+        f"Going forward, duplicates are blocked automatically at insert time (93% similarity threshold)."
     )
 
 
@@ -408,4 +408,4 @@ async def on_export(message: Message) -> None:
     rows = await DiaryRepo.export_all(user_id)
     payload = json.dumps(rows, ensure_ascii=False, indent=2, default=str).encode("utf-8")
     file = BufferedInputFile(payload, filename=f"diary_{datetime.utcnow():%Y%m%d}.json")
-    await message.answer_document(file, caption=f"Дневник: {len(rows)} записей")
+    await message.answer_document(file, caption=f"Diary: {len(rows)} entries")

@@ -28,17 +28,17 @@ TOOLS_SPEC: list[dict[str, Any]] = [
     {
         "name": "get_user_location",
         "description": (
-            "Получить последнюю известную локацию пользователя (город + координаты). "
-            "Используй когда нужно понять где пользователь, чтобы привязать ответ к городу."
+            "Get the user's last known location (city + coordinates). "
+            "Use it when you need to know where the user is, to anchor the answer to their city."
         ),
         "input_schema": {"type": "object", "properties": {}, "required": []},
     },
     {
         "name": "get_weather",
         "description": (
-            "Получить текущую погоду + прогноз на 1-7 дней для координат. "
-            "Возвращает температуру, осадки, ветер, восход/закат, описание погоды. "
-            "Использовать когда планируешь активности на улице, или пользователь спросил про погоду."
+            "Get the current weather + a 1-7 day forecast for coordinates. "
+            "Returns temperature, precipitation, wind, sunrise/sunset, weather description. "
+            "Use it when planning outdoor activities, or when the user asks about the weather."
         ),
         "input_schema": {
             "type": "object",
@@ -53,27 +53,27 @@ TOOLS_SPEC: list[dict[str, Any]] = [
     {
         "name": "schedule_reminder",
         "description": (
-            "Создать напоминание от своего имени в конкретное время. Бот САМ напишет пользователю в указанный момент. "
-            "Используй всегда, когда пользователь просит напомнить что-то к определённому времени "
-            "(«завтра утром», «через час», «в понедельник в 10»). "
-            "Переведи относительное время в ISO-8601 datetime с учётом часового пояса пользователя. "
-            "Текущее время и часовой пояс пользователя см. в system context. "
-            "Одно напоминание — одна задача. Для регулярных — ставь ближайшее, при срабатывании предложишь повторить."
+            "Create a reminder on your own behalf at a specific time. The bot will message the user ITSELF at that moment. "
+            "Always use it when the user asks to be reminded of something at a certain time "
+            "(\"tomorrow morning\", \"in an hour\", \"Monday at 10\"). "
+            "Convert the relative time to an ISO-8601 datetime in the user's timezone. "
+            "The user's current time and timezone are in the system context. "
+            "One reminder — one task. For recurring ones, set the nearest and offer to repeat when it fires."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "title": {
                     "type": "string",
-                    "description": "Короткий заголовок напоминания (до 200 символов)",
+                    "description": "Short reminder title (up to 200 characters)",
                 },
                 "remind_at": {
                     "type": "string",
-                    "description": "ISO-8601 datetime с TZ offset, например '2026-04-18T08:00:00+07:00'",
+                    "description": "ISO-8601 datetime with TZ offset, e.g. '2026-04-18T08:00:00+07:00'",
                 },
                 "details": {
                     "type": "string",
-                    "description": "Дополнительный контекст, опционально",
+                    "description": "Additional context, optional",
                 },
             },
             "required": ["title", "remind_at"],
@@ -82,17 +82,17 @@ TOOLS_SPEC: list[dict[str, Any]] = [
     {
         "name": "wiki_geosearch",
         "description": (
-            "Найти достопримечательности и интересные места рядом с точкой (по Wikipedia). "
-            "Полезно для планирования прогулок, поиска культурных активностей, идей куда сходить новенького. "
-            "Возвращает названия и ссылки на статьи."
+            "Find landmarks and interesting places near a point (via Wikipedia). "
+            "Useful for planning walks, finding cultural activities, ideas for somewhere new to go. "
+            "Returns names and links to articles."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "lat": {"type": "number"},
                 "lon": {"type": "number"},
-                "radius_m": {"type": "integer", "default": 5000, "description": "Макс 10000"},
-                "lang": {"type": "string", "default": "en", "description": "ISO язык: en, ru, vi, ..."},
+                "radius_m": {"type": "integer", "default": 5000, "description": "Max 10000"},
+                "lang": {"type": "string", "default": "en", "description": "ISO language: en, ru, vi, ..."},
             },
             "required": ["lat", "lon"],
         },
@@ -111,7 +111,7 @@ ToolFunc = Callable[..., Awaitable[Any]]
 async def _t_get_user_location(user_id: int, **_kwargs) -> dict:
     loc = await LocationsRepo.latest(user_id)
     if loc is None:
-        return {"error": "Локация ещё не задана. Попроси пользователя отправить геопозицию или указать город через /where."}
+        return {"error": "No location set yet. Ask the user to send their position or set a city via /where."}
     return {
         "lat": loc["lat"],
         "lon": loc["lon"],
@@ -122,7 +122,7 @@ async def _t_get_user_location(user_id: int, **_kwargs) -> dict:
 
 async def _t_get_weather(user_id: int, *, lat, lon, days=3) -> dict:
     data = await weather.get_weather(float(lat), float(lon), days=int(days))
-    return data or {"error": "Погода временно недоступна"}
+    return data or {"error": "Weather temporarily unavailable"}
 
 
 async def _t_wiki_geosearch(user_id: int, *, lat, lon, radius_m=5000, lang="en") -> dict:
@@ -137,10 +137,10 @@ async def _t_schedule_reminder(user_id: int, *, title, remind_at, details=None) 
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
     except Exception as e:
-        return {"error": f"invalid remind_at (ожидается ISO-8601): {e}"}
+        return {"error": f"invalid remind_at (expected ISO-8601): {e}"}
 
     if dt <= datetime.now(timezone.utc):
-        return {"error": "remind_at должен быть в будущем"}
+        return {"error": "remind_at must be in the future"}
 
     task = await TasksRepo.create(
         TaskItem(

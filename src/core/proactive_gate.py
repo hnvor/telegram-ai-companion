@@ -45,15 +45,15 @@ async def decide_proactive(
     convo = "\n".join(
         f"[{r['created_at']:%m-%d %H:%M}] {(r['content'] or '')[:300]}"
         for r in reversed(rows)
-    ) or "Сообщений нет."
+    ) or "No messages."
 
     user_message = (
         f"pressure={signals.pressure:.2f}\n"
         f"engagement={signals.engagement:.2f}\n"
         f"signals_breakdown={signals.note}\n"
         f"proposed_kind={kind}\n\n"
-        f"## Последние сообщения пользователя\n{convo}\n\n"
-        "Решай: send или нет?"
+        f"## User's latest messages\n{convo}\n\n"
+        "Decide: send or not?"
     )
 
     try:

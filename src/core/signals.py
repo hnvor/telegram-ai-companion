@@ -17,19 +17,19 @@ from src.db.client import get_pool
 log = structlog.get_logger()
 
 
-# Простые маркеры тона. Не идеально, но дёшево и без LLM.
+# Simple tone markers. Not perfect, but cheap and LLM-free.
 NEGATIVE_MARKERS = [
-    "выжат", "устал", "усталость", "тяжело", "тяжёлый день", "тяжелый день",
-    "нет сил", "не могу", "нихуя", "никак", "автопилот", "туннел", "пизд",
-    "ужасно", "плохо себя", "тревога", "паника", "напряг",
-    "забил", "не успел", "не сделал", "слил", "провтык",
-    "хуёво", "херово", "хуево",
+    "drained", "tired", "exhausted", "hard day", "rough day", "tough day",
+    "no energy", "can't", "cannot", "autopilot", "tunnel", "burnt out", "burned out",
+    "awful", "feel bad", "feeling bad", "anxiety", "anxious", "panic", "tense", "stressed",
+    "didn't get to", "didn't do", "skipped", "blew it", "overwhelmed",
+    "shitty", "crappy", "fucked up",
 ]
 POSITIVE_MARKERS = [
-    "получил", "получилось", "сделал", "закрыл", "прошёл", "прошел",
-    "разобрался", "получше", "легче", "по кайфу", "класс",
-    "энерги", "кайф", "огонь", "хорошо себя", "продвинулся",
-    "проснул", "выспал", "зашло", "кайфон",
+    "got it", "worked out", "got done", "did it", "closed", "finished", "wrapped up",
+    "figured out", "better", "easier", "loved it", "great",
+    "energy", "stoked", "on fire", "feeling good", "made progress",
+    "woke up", "slept well", "landed", "felt good",
 ]
 
 

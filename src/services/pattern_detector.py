@@ -28,37 +28,37 @@ log = structlog.get_logger()
 
 
 AUTOPILOT_KEYWORDS = (
-    "автопилот", "туннел", "не вижу", "не осозна", "пусто",
-    "стен", "будто меня нет", "не помню как",
+    "autopilot", "tunnel", "can't see", "not aware", "numb", "empty",
+    "wall", "like i'm not here", "don't remember how", "blur",
 )
 MOVEMENT_KEYWORDS = (
-    "гулял", "прогулк", "сходил", "вышел", "пешком", "побегал",
-    "тренировк", "разминк", "баня", "сауна", "пробежк", "поплавал",
-    "велосипед", "размяк", "отжим", "приседан",
+    "walk", "walked", "stroll", "went out", "on foot", "ran ", "run ",
+    "workout", "warm-up", "warmup", "sauna", "jog", "swam", "swim",
+    "cycle", "bike", "stretch", "pushups", "push-ups", "squats", "gym",
 )
 NEGATIVE_BODY_MARKERS = (
-    "напряг", "зажатост", "болит", "шея зажат", "челюсть",
+    "tense", "tension", "tight", "hurts", "ache", "neck tight", "jaw", "stiff",
 )
 
 
-SOFT_SIGNAL_PROMPT = """Ты заметил паттерн в состоянии пользователя за последние дни.
-Тебе передаются:
-- Тип сигнала с описанием
-- Доказательства из его сообщений и метрик
-- Портрет жизни (life_state) для контекста
+SOFT_SIGNAL_PROMPT = """You've noticed a pattern in the user's state over the last few days.
+You're given:
+- The signal type with a description
+- Evidence from their messages and metrics
+- The life portrait (life_state) for context
 
-Напиши проактивное сообщение пользователю.
+Write a proactive message to the user.
 
-ПРАВИЛА
-1. Не приветствуй. Вы уже в постоянной переписке.
-2. Прямо назови что заметил. Привяжи к конкретике из доказательств, не общие слова.
-3. ОДИН вопрос или ОДНО конкретное предложение действия — не больше.
-4. Тон без паники, без морали, без «давай работать над собой».
-5. 2-4 предложения максимум.
-6. Учитывай его устойчивые паттерны из портрета жизни (например запрет на отдых, гиперфокус на работе) — не предлагай делать больше, предлагай делать иначе.
-7. Если уместно — опирайся на experiments, что у него уже зашло.
+RULES
+1. Don't greet. You're already in an ongoing conversation.
+2. Name directly what you noticed. Tie it to specifics from the evidence, not vague words.
+3. ONE question or ONE concrete action suggestion — no more.
+4. Tone without panic, without moralizing, without "let's work on ourselves".
+5. 2-4 sentences max.
+6. Account for their stable patterns from the life portrait (e.g. a ban on rest, hyperfocus on work) — don't suggest doing more, suggest doing it differently.
+7. If relevant — lean on experiments, what already landed for them.
 
-Пиши финальный текст сообщения. Без префикса, без объяснений.
+Write the final message text. No prefix, no explanations.
 """
 
 
@@ -106,14 +106,14 @@ async def run_pattern_detection(bot: Bot, user_id: int) -> None:
     life_state = await LifeStateRepo.get(user_id) or {}
 
     user_brief = (
-        f"Сигнал: {chosen['kind']} (severity={chosen['severity']})\n"
-        f"Описание: {chosen['description']}\n"
-        f"Доказательства: {chosen['evidence']}\n\n"
-        f"## Портрет жизни\n{format_life_state_block(life_state)[:2000]}\n\n"
-        "Сформулируй проактивное сообщение."
+        f"Signal: {chosen['kind']} (severity={chosen['severity']})\n"
+        f"Description: {chosen['description']}\n"
+        f"Evidence: {chosen['evidence']}\n\n"
+        f"## Life portrait\n{format_life_state_block(life_state)[:2000]}\n\n"
+        "Compose a proactive message."
     )
     if decision.soften:
-        user_brief += f"\n\n[смягчи: {decision.soften}]"
+        user_brief += f"\n\n[soften: {decision.soften}]"
 
     try:
         text = await llm_chat(
@@ -179,7 +179,7 @@ async def _detect_soft_signals(user_id: int) -> list[dict]:
         found.append({
             "kind": "mood_below_baseline",
             "severity": "high" if (base_avg - recent_avg) >= 1.5 else "medium",
-            "description": "Настроение/энергия в последнюю неделю заметно ниже личной нормы",
+            "description": "Mood/energy in the past week noticeably below personal baseline",
             "evidence": {"recent_7d": round(float(recent_avg), 2),
                           "baseline_30d": round(float(base_avg), 2),
                           "delta": round(float(base_avg - recent_avg), 2)},
@@ -204,7 +204,7 @@ async def _detect_soft_signals(user_id: int) -> list[dict]:
         found.append({
             "kind": "autopilot_frequency",
             "severity": "high" if len(autopilot_hits) >= 4 else "medium",
-            "description": "Сам упоминаешь автопилот/туннель чаще обычного — паттерн обостряется",
+            "description": "You mention autopilot/tunnel more than usual — the pattern is intensifying",
             "evidence": {"hits": autopilot_hits[:5], "count": len(autopilot_hits)},
             "cooldown_hours": 72,
         })
@@ -224,7 +224,7 @@ async def _detect_soft_signals(user_id: int) -> list[dict]:
         found.append({
             "kind": "no_movement",
             "severity": "medium",
-            "description": "За 4 дня ни одного упоминания движения/прогулки/тела",
+            "description": "No mention of movement/walks/body in 4 days",
             "evidence": {"days": 4, "movement_mentions": 0,
                           "messages_total": len(rows)},
             "cooldown_hours": 72,
@@ -248,7 +248,7 @@ async def _detect_soft_signals(user_id: int) -> list[dict]:
         found.append({
             "kind": "body_tension",
             "severity": "medium",
-            "description": "Часто упоминаешь напряжение/зажатость тела — стоит вернуться к якорям",
+            "description": "You often mention body tension/tightness — worth returning to anchors",
             "evidence": {"hits": body_hits[:5]},
             "cooldown_hours": 96,
         })
@@ -264,7 +264,7 @@ async def _detect_soft_signals(user_id: int) -> list[dict]:
         found.append({
             "kind": "high_postpone",
             "severity": "medium",
-            "description": "3+ задач переносятся 3+ раза — стоит спросить почему",
+            "description": "3+ tasks postponed 3+ times — worth asking why",
             "evidence": {"tasks": [dict(r) for r in chronic]},
             "cooldown_hours": 168,
         })
@@ -287,7 +287,7 @@ async def _detect_soft_signals(user_id: int) -> list[dict]:
             found.append({
                 "kind": "experiment_regression",
                 "severity": "low",
-                "description": "Последний эксперимент не вышел и новых не пробовал",
+                "description": "The last experiment didn't work out and no new ones were tried",
                 "evidence": {"failed_title": last_failed["title"]},
                 "cooldown_hours": 168,
             })

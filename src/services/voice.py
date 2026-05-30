@@ -38,10 +38,9 @@ async def transcribe_voice(ogg_bytes: bytes) -> str | None:
                     {
                         "type": "text",
                         "text": (
-                            "Транскрибируй это голосовое сообщение слово в слово на русском "
-                            "(если речь на другом языке — на этом языке). "
-                            "Не редактируй, не сокращай, не добавляй комментарии. "
-                            "Только сам текст транскрипции."
+                            "Transcribe this voice message word for word in the language spoken. "
+                            "Don't edit, don't shorten, don't add comments. "
+                            "Only the transcription text itself."
                         ),
                     },
                 ],
@@ -52,8 +51,8 @@ async def transcribe_voice(ogg_bytes: bytes) -> str | None:
     headers = {
         "Authorization": f"Bearer {settings.openrouter_api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/personal-agent",
-        "X-Title": "Personal Agent",
+        "HTTP-Referer": "https://github.com/hnvor/telegram-ai-companion",
+        "X-Title": "Telegram AI Companion",
     }
 
     try:

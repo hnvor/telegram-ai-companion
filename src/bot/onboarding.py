@@ -42,8 +42,8 @@ async def start(message: Message, state: FSMContext) -> None:
     profile = await ProfileRepo.get(user_id)
     if profile and profile.onboarding_completed_at:
         await message.answer(
-            "Я уже тебя знаю 👋. Просто пиши мне — про задачи, состояние, мысли.\n"
-            "Команды: /help",
+            "I already know you 👋. Just message me — about tasks, how you feel, thoughts.\n"
+            "Commands: /help",
         )
         return
 
@@ -53,11 +53,11 @@ async def start(message: Message, state: FSMContext) -> None:
 
     await state.set_state(Onboard.NAME)
     await message.answer(
-        "Привет. Я твой личный ассистент — буду помнить про твои дела, состояние, "
-        "пушить когда нужно и давать отдыхать когда ты устал.\n\n"
-        "Сначала пройдём короткий онбординг минут на 5-7. Можно ответить одной фразой "
-        "на каждый вопрос — потом всё это будет уточняться по ходу.\n\n"
-        "Как тебя называть?"
+        "Hi. I'm your personal assistant — I'll remember your tasks and how you're doing, "
+        "nudge you when needed, and back off when you're tired.\n\n"
+        "First, a short 5-7 minute onboarding. A one-line answer to each question is fine — "
+        "everything gets refined as we go.\n\n"
+        "What should I call you?"
     )
 
 
@@ -68,9 +68,9 @@ async def on_name(message: Message, state: FSMContext) -> None:
     await ProfileRepo.patch(user_id, display_name=name)
     await state.set_state(Onboard.TIMEZONE)
     await message.answer(
-        f"Окей, {name}. Часовой пояс?\n"
-        f"Сейчас стоит дефолтный {settings.default_timezone}. "
-        f"Если подходит — напиши «ок». Иначе — свой, например Europe/Kyiv или Asia/Bangkok."
+        f"Okay, {name}. Timezone?\n"
+        f"Default right now is {settings.default_timezone}. "
+        f"If that works — type \"ok\". Otherwise give your own, e.g. Europe/Kyiv or Asia/Bangkok."
     )
 
 
@@ -78,18 +78,18 @@ async def on_name(message: Message, state: FSMContext) -> None:
 async def on_tz(message: Message, state: FSMContext) -> None:
     user_id = message.from_user.id  # type: ignore[union-attr]
     text = message.text.strip()  # type: ignore[union-attr]
-    if text.lower() not in ("ок", "ok", "да", "yes", ""):
+    if text.lower() not in ("ок", "ok", "да", "yes", "okay", ""):
         try:
             ZoneInfo(text)
             await ProfileRepo.patch(user_id, timezone=text)
         except Exception:
-            await message.answer("Не узнаю такой пояс. Попробуй формат Europe/Kyiv или напиши «ок».")
+            await message.answer("I don't recognize that timezone. Try the Europe/Kyiv format or type \"ok\".")
             return
 
     await state.set_state(Onboard.GOALS)
     await message.answer(
-        "Какие у тебя сейчас 1-3 главные цели на ближайшие 3 месяца? "
-        "Можно списком через запятую или с новой строки."
+        "What are your 1-3 main goals for the next 3 months right now? "
+        "A comma-separated list or one per line is fine."
     )
 
 
@@ -112,13 +112,13 @@ async def on_goals(message: Message, state: FSMContext) -> None:
         goals = [text[:200]]
 
     await ProfileRepo.patch(user_id, goals=goals)
-    facts_to_save = [f"Цель: {g}" for g in goals]
+    facts_to_save = [f"Goal: {g}" for g in goals]
     if context_note:
-        facts_to_save.append(f"Контекст по целям: {context_note}")
+        facts_to_save.append(f"Goals context: {context_note}")
     await _save_facts(user_id, "goal", facts_to_save)
 
     await state.set_state(Onboard.PROJECTS)
-    await message.answer("Над какими проектами сейчас работаешь? (можно списком или одной фразой)")
+    await message.answer("What projects are you working on right now? (a list or a single line is fine)")
 
 
 @router.message(Onboard.PROJECTS, F.text)
@@ -126,12 +126,12 @@ async def on_projects(message: Message, state: FSMContext) -> None:
     user_id = message.from_user.id  # type: ignore[union-attr]
     projects = _split_list(message.text)  # type: ignore[arg-type]
     await ProfileRepo.patch(user_id, projects=projects)
-    await _save_facts(user_id, "project", [f"Проект пользователя: {p}" for p in projects])
+    await _save_facts(user_id, "project", [f"User project: {p}" for p in projects])
 
     await state.set_state(Onboard.HEALTH)
     await message.answer(
-        "Как у тебя со здоровьем сейчас? Что беспокоит, что хотел бы улучшить? "
-        "Постоянные привычки/лекарства? Можно одной длинной фразой."
+        "How's your health right now? Anything bothering you, anything you'd like to improve? "
+        "Any ongoing habits/medications? One long sentence is fine."
     )
 
 
@@ -139,18 +139,18 @@ async def on_projects(message: Message, state: FSMContext) -> None:
 async def on_health(message: Message, state: FSMContext) -> None:
     user_id = message.from_user.id  # type: ignore[union-attr]
     text = message.text.strip()  # type: ignore[union-attr]
-    if text and text.lower() not in ("нет", "пропустить", "skip", "-"):
-        await _save_facts(user_id, "health", [f"О здоровье на старте: {text}"])
+    if text and text.lower() not in ("нет", "no", "none", "пропустить", "skip", "-"):
+        await _save_facts(user_id, "health", [f"Health at start: {text}"])
 
     await state.set_state(Onboard.PUSHES)
     await message.answer(
-        "Какие проактивные пуши хочешь? Несколько вариантов через запятую:\n"
-        "• вода — напоминать пить\n"
-        "• сон — гнать спать вовремя\n"
-        "• тренировки — пушить двигаться\n"
-        "• вечерний чекин — спрашивать как день\n"
-        "• утренний брифинг — план на день\n"
-        "Если хочешь всё — напиши «всё»."
+        "Which proactive nudges do you want? A few, comma-separated:\n"
+        "• water — remind you to drink\n"
+        "• sleep — push you to sleep on time\n"
+        "• workouts — nudge you to move\n"
+        "• evening check-in — ask how the day went\n"
+        "• morning brief — plan for the day\n"
+        "If you want all of them — type \"all\"."
     )
 
 
@@ -178,15 +178,15 @@ async def on_pushes(message: Message, state: FSMContext) -> None:
     await ProfileRepo.patch(user_id, preferences=prefs)
 
     if notes:
-        await _save_facts(user_id, "preference", [f"Пожелание по пушам: {notes}"])
+        await _save_facts(user_id, "preference", [f"Nudge preference: {notes}"])
 
     await state.set_state(Onboard.TONE)
     await message.answer(
-        "Последний вопрос. Какой тон тебе ближе на старте?\n"
-        "1) друг — тёплый, с юмором, мягкий пуш\n"
-        "2) коуч — прямой, требовательный\n"
-        "3) наставник — спокойный, через вопросы\n"
-        "(потом я буду подстраиваться сам по твоим реакциям)"
+        "Last question. Which tone feels right to start with?\n"
+        "1) friend — warm, a bit of humor, gentle push\n"
+        "2) coach — direct, demanding\n"
+        "3) mentor — calm, asks questions\n"
+        "(I'll adapt on my own based on your reactions later)"
     )
 
 
@@ -195,11 +195,11 @@ async def on_tone(message: Message, state: FSMContext) -> None:
     user_id = message.from_user.id  # type: ignore[union-attr]
     text = message.text.strip().lower()  # type: ignore[union-attr]
 
-    if text.startswith("1") or "друг" in text:
+    if text.startswith("1") or "friend" in text:
         tone = {"warmth": 0.8, "directness": 0.5, "humor": 0.7, "push_intensity": 0.5}
-    elif text.startswith("2") or "коуч" in text:
+    elif text.startswith("2") or "coach" in text:
         tone = {"warmth": 0.4, "directness": 0.9, "humor": 0.3, "push_intensity": 0.85}
-    elif text.startswith("3") or "наставник" in text:
+    elif text.startswith("3") or "mentor" in text:
         tone = {"warmth": 0.7, "directness": 0.4, "humor": 0.4, "push_intensity": 0.3}
     else:
         tone = {"warmth": 0.7, "directness": 0.6, "humor": 0.6, "push_intensity": 0.55}
@@ -215,9 +215,9 @@ async def on_tone(message: Message, state: FSMContext) -> None:
 
     await state.clear()
     await message.answer(
-        "Готово 👌\n\n"
-        "Дальше — просто пиши мне. Можно текстом, можно голосом. Я буду помнить всё.\n"
-        "Начни с того, что у тебя сейчас на уме. Или напиши /help.",
+        "Done 👌\n\n"
+        "From here — just message me. Text or voice. I'll remember everything.\n"
+        "Start with whatever's on your mind right now. Or type /help.",
         reply_markup=remove_kb(),
     )
 
@@ -225,7 +225,7 @@ async def on_tone(message: Message, state: FSMContext) -> None:
     await ConversationsRepo.append(
         user_id,
         "system",
-        "Онбординг завершён. Профиль настроен.",
+        "Onboarding complete. Profile set up.",
     )
 
 

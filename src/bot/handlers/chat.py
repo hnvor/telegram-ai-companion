@@ -36,7 +36,7 @@ async def on_text(message: Message, state: FSMContext) -> None:
     profile = await ProfileRepo.get(user_id)
     if profile is None or profile.onboarding_completed_at is None:
         await message.answer(
-            "Сначала пройдём короткий онбординг — нажми /start"
+            "Let's do a short onboarding first — hit /start"
         )
         return
 
@@ -61,7 +61,7 @@ async def on_text(message: Message, state: FSMContext) -> None:
         )
     except Exception as e:
         log.exception("chat.llm_failed", error=str(e))
-        await message.answer("Что-то пошло не так с моим мозгом, попробуй ещё раз через минуту.")
+        await message.answer("Something went wrong on my end, try again in a minute.")
         return
 
     cleaned, task_titles = _extract_task_markers(response)
@@ -77,7 +77,7 @@ async def on_text(message: Message, state: FSMContext) -> None:
     for title in task_titles:
         try:
             t = await TasksRepo.create(TaskItem(user_id=user_id, title=title))
-            await message.answer(f"📌 Записал задачу #{t.id}: {title}")
+            await message.answer(f"📌 Logged task #{t.id}: {title}")
         except Exception as e:
             log.warning("task.create_failed", error=str(e))
 

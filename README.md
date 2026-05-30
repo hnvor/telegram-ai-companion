@@ -118,8 +118,6 @@ so subsequent restarts are fast.
 - **Single-user.** No multi-tenancy, no per-user isolation beyond the auth gate — that
   was a deliberate constraint to keep the memory model simple.
 - **Secrets** live only in `.env` (gitignored). `.env.example` ships placeholders.
-- Code comments are in Russian (it started as a personal tool); the architecture above
-  is the English summary.
 
 ---
 

@@ -40,7 +40,7 @@ async def _last_week_summary(user_id: int, week_end_utc: datetime) -> str:
         user_id, since, week_end_utc,
     )
     if not rows:
-        return "Сообщений нет."
+        return "No messages."
     lines = []
     for r in rows:
         ts = r["created_at"].strftime("%m-%d %H:%M")
@@ -64,15 +64,15 @@ async def generate_weekly_plan(user_id: int, for_week_start: date) -> dict | Non
     experiments = await ExperimentsRepo.recent(user_id, days=60, limit=30)
 
     user_message = (
-        "## ПОРТРЕТ ЖИЗНИ\n"
+        "## LIFE PORTRAIT\n"
         + json.dumps(state, ensure_ascii=False, indent=2)
-        + "\n\n## ПРОШЛАЯ НЕДЕЛЯ (план + сообщения)\n"
-        + (json.dumps(prev_plan, ensure_ascii=False, indent=2, default=str) if prev_plan else "Плана не было.")
-        + "\n\n--- сообщения ---\n"
+        + "\n\n## LAST WEEK (plan + messages)\n"
+        + (json.dumps(prev_plan, ensure_ascii=False, indent=2, default=str) if prev_plan else "There was no plan.")
+        + "\n\n--- messages ---\n"
         + last_week
-        + "\n\n## ИСТОРИЯ ЭКСПЕРИМЕНТОВ (что зашло, что нет)\n"
+        + "\n\n## EXPERIMENT HISTORY (what landed, what didn't)\n"
         + json.dumps(experiments, ensure_ascii=False, indent=2, default=str)[:4000]
-        + "\n\n## ЗАДАЧА\nВерни JSON плана на следующую неделю."
+        + "\n\n## TASK\nReturn JSON for next week's plan."
     )
 
     try:
@@ -123,7 +123,7 @@ async def generate_weekly_plan(user_id: int, for_week_start: date) -> dict | Non
 
 
 def format_plan_message(plan: dict) -> str:
-    lines = ["📅 План недели", ""]
+    lines = ["📅 Week plan", ""]
     for i, f in enumerate(plan.get("focuses", []), start=1):
         if isinstance(f, dict):
             lines.append(f"{i}. {f.get('title', '?')}")
@@ -132,16 +132,16 @@ def format_plan_message(plan: dict) -> str:
     if plan.get("experiment"):
         e = plan["experiment"]
         lines.append("")
-        lines.append("🧪 Эксперимент недели")
+        lines.append("🧪 Experiment of the week")
         lines.append(f"{e.get('what', '?')}")
         if e.get("how"):
-            lines.append(f"как: {e['how']}")
+            lines.append(f"how: {e['how']}")
         if e.get("why"):
-            lines.append(f"зачем: {e['why']}")
+            lines.append(f"why: {e['why']}")
     if plan.get("challenge"):
         c = plan["challenge"]
         lines.append("")
-        lines.append("🎯 Челлендж")
+        lines.append("🎯 Challenge")
         lines.append(f"{c.get('what', '?')}")
         if c.get("why"):
             lines.append(c["why"])

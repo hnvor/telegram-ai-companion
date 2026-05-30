@@ -16,39 +16,39 @@ log = structlog.get_logger()
 
 
 PLANNER_INSTRUCTIONS = {
-    "date": """Тебе дали задачу: спланировать конкретный план свидания на сегодня/ближайшие дни.
+    "date": """You've been given a task: plan a concrete date for today / the next few days.
 
-ЧТО ДЕЛАТЬ:
-1. Узнай локацию через get_user_location (если её нет — попроси город или геопозицию).
-2. Глянь погоду через get_weather — это влияет на сценарий.
-3. Опционально: wiki_geosearch для одной интересной достопримечательности.
-4. Сформулируй сценарий: 2-3 точки/активности с привязкой ко времени, маршрут по смыслу.
-5. Опирайся на свои знания о городе и категориях мест — конкретные адреса и названия НЕ выдумывай.
-6. Если нужна конкретика по адресу/расписанию — честно скажи «глянь в Google Maps по запросу X».
-7. Длина: 8-12 строк.
+WHAT TO DO:
+1. Get the location via get_user_location (if there's none — ask for the city or coordinates).
+2. Check the weather via get_weather — it affects the plan.
+3. Optionally: wiki_geosearch for one interesting landmark.
+4. Lay out the plan: 2-3 spots/activities with timing, a route that makes sense.
+5. Rely on your knowledge of the city and place categories — do NOT invent specific addresses or names.
+6. If specifics on an address/schedule are needed — honestly say "check Google Maps for X".
+7. Length: 8-12 lines.
 
-Если пользователь дал контекст (девушка, бюджет, район, чего хочется) — учти. Если нет — спроси одну ключевую вещь.""",
+If the user gave context (a partner, budget, area, what they're after) — factor it in. If not — ask one key thing.""",
 
-    "day": """Задача: спланировать день пользователя на сегодня.
+    "day": """Task: plan the user's day for today.
 
-ЧТО ДЕЛАТЬ:
-1. Возьми активные задачи из system context.
-2. Возьми привычки и сегодняшние логи.
-3. Проверь погоду через get_weather (вызови get_user_location если нужно).
-4. Распиши день блоками: утро, день, вечер. Привязка к энергетическим окнам пользователя.
-5. Между блоками дай микро-разгрузки (разминка, прогулка, дыхание).
-6. Если погода плохая — не предлагай уличное.
-7. Длина: 12-15 строк, конкретно.""",
+WHAT TO DO:
+1. Take the active tasks from the system context.
+2. Take habits and today's logs.
+3. Check the weather via get_weather (call get_user_location if needed).
+4. Lay the day out in blocks: morning, afternoon, evening. Tie it to the user's energy windows.
+5. Between blocks, add micro-breaks (a stretch, a walk, breathing).
+6. If the weather is bad — don't suggest outdoor things.
+7. Length: 12-15 lines, concrete.""",
 
-    "activity": """Задача: предложить пользователю одну активность сейчас под его текущее состояние.
+    "activity": """Task: suggest the user one activity right now, suited to their current state.
 
-ЧТО ДЕЛАТЬ:
-1. Прочитай последний дневник и недавние сообщения из system context — оцени состояние.
-2. Если уместно — get_weather (например для решения «улица или дом»).
-3. Дай ОДНУ конкретную активность с обоснованием почему именно она. Не три варианта.
-4. Если состояние плохое — мягкое (прогулка, парная, тихое кафе). Если ОК — можно энергичнее.
-5. Конкретные места/адреса не выдумывай — давай категорию и направление, или скажи «глянь по запросу X в картах».
-6. Длина: 4-7 строк."""
+WHAT TO DO:
+1. Read the latest diary entry and recent messages from the system context — gauge their state.
+2. If relevant — get_weather (e.g. to decide "outdoors or home").
+3. Give ONE concrete activity with a reason why this one. Not three options.
+4. If their state is poor — keep it gentle (a walk, a sauna, a quiet cafe). If they're OK — it can be more energetic.
+5. Don't invent specific places/addresses — give a category and direction, or say "search for X on maps".
+6. Length: 4-7 lines."""
 }
 
 
@@ -58,9 +58,9 @@ async def _run_planner(message: Message, mode: str) -> None:
     extra = parts[1].strip() if len(parts) > 1 else ""
 
     seed_user_msg = {
-        "date": f"Спланируй свидание. Детали: {extra}" if extra else "Спланируй мне свидание.",
-        "day": f"Распиши мне день. Контекст: {extra}" if extra else "Распиши мне день.",
-        "activity": f"Предложи активность сейчас. Контекст: {extra}" if extra else "Предложи мне сейчас одну активность под моё состояние.",
+        "date": f"Plan a date. Details: {extra}" if extra else "Plan a date for me.",
+        "day": f"Lay out my day. Context: {extra}" if extra else "Lay out my day.",
+        "activity": f"Suggest an activity right now. Context: {extra}" if extra else "Suggest me one activity right now for my current state.",
     }[mode]
 
     bundle = await memory.build_context(user_id, seed_user_msg)
@@ -81,7 +81,7 @@ async def _run_planner(message: Message, mode: str) -> None:
         )
     except Exception as e:
         log.exception("planner.failed", mode=mode, error=str(e))
-        await message.answer("Не получилось спланировать сейчас. Попробуй ещё раз через минуту.")
+        await message.answer("Couldn't plan that right now. Try again in a minute.")
         return
 
     await message.answer(text)

@@ -16,7 +16,7 @@ OVERPASS_FALLBACKS = [
     "https://overpass.kumi.systems/api/interpreter",
     "https://overpass.private.coffee/api/interpreter",
 ]
-USER_AGENT = "personal_agent_telegram_bot/0.1 (single-user)"
+USER_AGENT = "telegram_ai_companion_bot/0.1 (single-user)"
 
 
 # Высокоуровневые категории → списки (key, value) для Overpass
@@ -99,7 +99,7 @@ async def find_around(
             continue
 
         tags = el.get("tags", {}) or {}
-        name = tags.get("name") or tags.get("operator") or "(без названия)"
+        name = tags.get("name") or tags.get("operator") or "(unnamed)"
         results.append(
             {
                 "name": name,

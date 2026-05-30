@@ -19,7 +19,7 @@ log = structlog.get_logger()
 async def on_task_create(message: Message) -> None:
     parts = (message.text or "").split(maxsplit=1)
     if len(parts) < 2:
-        await message.answer("Используй: /task купить молоко завтра")
+        await message.answer("Use: /task buy milk tomorrow")
         return
     title = parts[1].strip()
     user_id = message.from_user.id  # type: ignore[union-attr]
@@ -35,9 +35,9 @@ async def on_tasks_list(message: Message) -> None:
     user_id = message.from_user.id  # type: ignore[union-attr]
     tasks = await TasksRepo.list_active(user_id, limit=30)
     if not tasks:
-        await message.answer("Открытых задач нет 🎉")
+        await message.answer("No open tasks 🎉")
         return
-    lines = ["Активные задачи:"]
+    lines = ["Active tasks:"]
     for t in tasks:
         proj = f" [{t.project}]" if t.project else ""
         due = f" → {t.due_at:%d.%m %H:%M}" if t.due_at else ""
@@ -50,12 +50,12 @@ async def on_tasks_list(message: Message) -> None:
 async def on_task_done(message: Message) -> None:
     parts = (message.text or "").split(maxsplit=1)
     if len(parts) < 2 or not parts[1].strip().isdigit():
-        await message.answer("Используй: /done 42")
+        await message.answer("Use: /done 42")
         return
     task_id = int(parts[1])
     task = await TasksRepo.get(task_id)
     if task is None or task.user_id != message.from_user.id:  # type: ignore[union-attr]
-        await message.answer("Не нашёл такую задачу.")
+        await message.answer("Couldn't find that task.")
         return
     await TasksRepo.mark_done(task_id)
     await message.answer(f"✅ #{task_id} {task.title}")
@@ -72,14 +72,14 @@ async def on_task_callback(cb: CallbackQuery) -> None:
     if action == "done":
         task_id = int(parts[2])
         await TasksRepo.mark_done(task_id)
-        await cb.message.edit_text(f"✅ Закрыто #{task_id}")  # type: ignore[union-attr]
-        await cb.answer("Готово")
+        await cb.message.edit_text(f"✅ Closed #{task_id}")  # type: ignore[union-attr]
+        await cb.answer("Done")
         return
 
     if action == "drop":
         task_id = int(parts[2])
         await TasksRepo.update_status(task_id, "dropped")
-        await cb.message.edit_text(f"❌ Дроп #{task_id}")  # type: ignore[union-attr]
+        await cb.message.edit_text(f"❌ Dropped #{task_id}")  # type: ignore[union-attr]
         await cb.answer()
         return
 
@@ -98,7 +98,7 @@ async def on_task_callback(cb: CallbackQuery) -> None:
             new_remind = datetime.now(timezone.utc) + timedelta(hours=2)
         await TasksRepo.postpone(task_id, new_remind)
         await cb.message.edit_text(  # type: ignore[union-attr]
-            f"⏰ #{task_id} перенесена на {new_remind:%d.%m %H:%M UTC}"
+            f"⏰ #{task_id} postponed to {new_remind:%d.%m %H:%M UTC}"
         )
         await cb.answer()
         return

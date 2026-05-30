@@ -167,7 +167,7 @@ async def check_task_reminders(bot: Bot, user_id: int) -> None:
             proj = f" [{row['project']}]" if row["project"] else ""
             await bot.send_message(
                 chat_id=user_id,
-                text=f"⏰ Напоминание: #{row['id']} {row['title']}{proj}",
+                text=f"⏰ Reminder: #{row['id']} {row['title']}{proj}",
                 reply_markup=task_actions_kb(row["id"]),
             )
             await pool.execute(
@@ -232,7 +232,7 @@ async def check_morning_brief(bot: Bot, user_id: int) -> None:
     # Генерим брифинг.
     # Подменяем active_tasks на отфильтрованный список (без застарелого мусора),
     # чтобы бриф не повторял задачи которые висят неделями.
-    bundle = await memory.build_context(user_id, "Доброе утро. Дай короткий брифинг на день.")
+    bundle = await memory.build_context(user_id, "Good morning. Give me a short brief for the day.")
     fresh_tasks = await TasksRepo.list_active(
         user_id, limit=10, max_age_days=7, max_postponed=3
     )
@@ -242,22 +242,22 @@ async def check_morning_brief(bot: Bot, user_id: int) -> None:
     avoid_block = ""
     if recent:
         avoid_block = (
-            "\n\n## ИЗБЕГАЙ ПОВТОРОВ\n"
-            "Вот последние утренние брифинги — НЕ начинай ровно так же и не повторяй "
-            "буквально те же задачи без причины:\n"
+            "\n\n## AVOID REPETITION\n"
+            "Here are the latest morning briefs — do NOT open exactly the same way and don't "
+            "literally repeat the same tasks without reason:\n"
             + "\n".join(f"- {t[:240]}" for t in recent)
         )
     if decision.soften:
         avoid_block += (
-            f"\n\n## СМЯГЧИ ТОН\nИнструкция от гейта: {decision.soften}\n"
-            "Сделай короче и без давления."
+            f"\n\n## SOFTEN THE TONE\nInstruction from the gate: {decision.soften}\n"
+            "Make it shorter and without pressure."
         )
     try:
         text = await llm_chat(
             user_id=user_id,
             system_static=SYSTEM_BASE + "\n\n" + MORNING_BRIEF_SYSTEM,
             system_dynamic=dynamic + avoid_block,
-            messages=[{"role": "user", "content": "Доброе утро. Дай короткий брифинг на день."}],
+            messages=[{"role": "user", "content": "Good morning. Give me a short brief for the day."}],
             purpose="morning_brief",
             temperature=0.75,
         )
@@ -300,28 +300,28 @@ async def check_evening_checkin(bot: Bot, user_id: int) -> None:
         await _set_pref(user_id, "evening_checkin_sent_date", today.isoformat())
         return
 
-    bundle = await memory.build_context(user_id, "Время вечернего чекина.")
+    bundle = await memory.build_context(user_id, "Time for the evening check-in.")
     dynamic = memory.format_dynamic_system(bundle)
     recent = await _recent_proactive_texts(user_id, "evening_checkin", limit=3)
     avoid_block = ""
     if recent:
         avoid_block = (
-            "\n\n## ИЗБЕГАЙ ПОВТОРОВ\n"
-            "Вот последние твои вечерние вопросы — НЕ начинай ровно так же, "
-            "формулируй иначе и цепляйся за конкретный контекст сегодняшнего дня:\n"
+            "\n\n## AVOID REPETITION\n"
+            "Here are your latest evening questions — do NOT open exactly the same way, "
+            "phrase it differently and hook onto the specific context of today:\n"
             + "\n".join(f"- {t[:200]}" for t in recent)
         )
     if decision.soften:
         avoid_block += (
-            f"\n\n## СМЯГЧИ ТОН\nИнструкция от гейта: {decision.soften}\n"
-            "Один вопрос максимум, без давления, можно просто сказать «я тут, если надо»."
+            f"\n\n## SOFTEN THE TONE\nInstruction from the gate: {decision.soften}\n"
+            "One question max, no pressure; you can just say \"I'm here if you need me\"."
         )
     try:
         text = await llm_chat(
             user_id=user_id,
             system_static=SYSTEM_BASE + "\n\n" + EVENING_CHECKIN_SYSTEM,
             system_dynamic=dynamic + avoid_block,
-            messages=[{"role": "user", "content": "Спроси меня про сегодняшний день, как обычно вечером."}],
+            messages=[{"role": "user", "content": "Ask me about today, like you usually do in the evening."}],
             purpose="evening_checkin",
             temperature=0.85,
         )
@@ -395,11 +395,11 @@ async def check_habit_nudges(bot: Bot, user_id: int) -> None:
             continue
         n = await HabitsRepo.count_today(h.id, day_start, day_end)
         if h.name == "water" and n < 4:
-            nudges.append(f"💧 Воды сегодня: {n}/{h.target.get('amount', 8) if h.target else 8}. Давай ещё стакан.")
+            nudges.append(f"💧 Water today: {n}/{h.target.get('amount', 8) if h.target else 8}. Have another glass.")
         elif h.name == "workout" and n == 0 and local_now.hour > 17:
-            nudges.append("💪 Сегодня ещё не двигался. 10 минут разминки сейчас?")
+            nudges.append("💪 Haven't moved yet today. 10 minutes of warm-up now?")
         elif h.name == "sleep" and local_now.hour >= 23:
-            nudges.append("😴 Скоро 23:00. Закругляйся, сон важнее.")
+            nudges.append("😴 Almost 23:00. Wrap up, sleep matters more.")
 
     for text in nudges[:1]:  # не больше 1 за раз
         try:
@@ -486,18 +486,18 @@ async def check_awareness_anchor(bot: Bot, user_id: int) -> None:
     avoid = ""
     if recent:
         avoid = (
-            "\n\nИзбегай повторов. Последние якоря:\n"
+            "\n\nAvoid repetition. Latest anchors:\n"
             + "\n".join(f"- {t}" for t in recent)
         )
 
-    bundle = await memory.build_context(user_id, "Дай якорь осознанности.")
+    bundle = await memory.build_context(user_id, "Give me an awareness anchor.")
     dynamic = memory.format_dynamic_system(bundle)
 
     try:
         text = await chat_json(
             user_id=user_id,
-            system=AWARENESS_ANCHOR_PROMPT + avoid + "\n\n## КОНТЕКСТ\n" + dynamic[:2000],
-            user_message="Сгенерируй один якорь.",
+            system=AWARENESS_ANCHOR_PROMPT + avoid + "\n\n## CONTEXT\n" + dynamic[:2000],
+            user_message="Generate one anchor.",
             purpose="awareness_anchor",
             max_tokens=80,
         )
@@ -543,7 +543,7 @@ async def weekly_review(bot: Bot, user_id: int) -> None:
     # 1. Хронические задачи — короткое уведомление если есть
     chronic = await TasksRepo.chronic_procrastinated(user_id, threshold=3)
     if chronic:
-        lines = ["Эти задачи переносятся 3+ раза. Что мешает?"]
+        lines = ["These tasks have been postponed 3+ times. What's getting in the way?"]
         for t in chronic[:5]:
             lines.append(f"• #{t.id} {t.title} (×{t.postponed_count})")
         try:

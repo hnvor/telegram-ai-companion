@@ -184,7 +184,7 @@ async def chat_with_tools(
         temperature=temperature,
         system=system_blocks,  # type: ignore[arg-type]
         messages=convo + [
-            {"role": "user", "content": "Без новых tool-вызовов: дай итоговый ответ пользователю на основе уже собранных данных."}
+            {"role": "user", "content": "No new tool calls: give the user a final answer based on the data already gathered."}
         ],
     )
     await _log_usage(user_id, model, final.usage, purpose + "_finalize")
